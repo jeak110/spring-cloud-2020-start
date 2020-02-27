@@ -16,6 +16,7 @@
                 <module>examinator</module>
                 <module>math-service</module>
                 <module>theology-service</module>
+                <module>discovery-server</module>
             </modules>
         </profile>
     </profiles>
