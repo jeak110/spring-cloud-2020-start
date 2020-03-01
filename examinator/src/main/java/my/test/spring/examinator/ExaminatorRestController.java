@@ -1,6 +1,10 @@
 package my.test.spring.examinator;
 
+import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
+import com.netflix.discovery.shared.Application;
+import com.netflix.discovery.shared.Applications;
+import lombok.AllArgsConstructor;
 import my.test.spring.examinator.model.Exercise;
 import my.test.spring.examinator.section.Section;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +25,7 @@ import static java.util.Arrays.asList;
 @RestController
 public class ExaminatorRestController {
     @Autowired
-    private DiscoveryClient discoveryClient;
-
-    public ExaminatorRestController() {
-    }
+    private EurekaClient eurekaClient;
 
     @GetMapping("/exam")
     public List<Exercise> getExercises(@RequestParam Map<String, String> map) {
@@ -47,10 +48,16 @@ public class ExaminatorRestController {
     }
 
     private List<Section> getSections() {
-        return discoveryClient.getServices().stream()
-                .map(serviceId -> discoveryClient.getInstances(serviceId))
-                .map(instances -> instances.get(0))
-                .map(instance -> new Section(instance.getServiceId().toLowerCase(), instance.getHost() + ":" + instance.getPort()))
-                .collect(Collectors.toList());
+        List<Section> results = new ArrayList<>();
+
+        Applications applications = eurekaClient.getApplications();
+        List<Application> registeredApplications = applications.getRegisteredApplications();
+
+        for (Application application : registeredApplications) {
+            List<InstanceInfo> instances = application.getInstances();
+            InstanceInfo instanceInfo = instances.get(0);
+            results.add(new Section(instanceInfo.getInstanceId(), instanceInfo.getHostName() + ":" + instanceInfo.getPort()));
+        }
+        return results;
     }
 }
