@@ -16,9 +16,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/exercise")
 public class ExerciseController {
-    @Autowired
-    private ApplicationContext appContext;
-
     @Value("${server.port}")
     private String serverPost;
 
