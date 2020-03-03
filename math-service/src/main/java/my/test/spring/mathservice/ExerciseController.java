@@ -3,6 +3,7 @@ package my.test.spring.mathservice;
 import my.test.spring.mathservice.model.Exercise;
 import org.apache.el.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,10 +19,12 @@ public class ExerciseController {
     @Autowired
     private ApplicationContext appContext;
 
+    @Value("${server.port}")
+    private String serverPost;
 
     @GetMapping("/random")
     public List<Exercise> random(@RequestParam Integer counter) {
-        System.out.println("Math: " + appContext.getId());
+        System.out.println("Math service: " + serverPost);
 
         List<Exercise> result = new ArrayList<>();
         for (int i = 0; i < counter; i++) {

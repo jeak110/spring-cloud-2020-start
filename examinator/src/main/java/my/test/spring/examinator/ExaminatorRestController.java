@@ -4,6 +4,7 @@ import com.netflix.discovery.EurekaClient;
 import my.test.spring.examinator.model.Exercise;
 import my.test.spring.examinator.section.Section;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 @RestController
 public class ExaminatorRestController {
@@ -34,13 +36,15 @@ public class ExaminatorRestController {
 
     @GetMapping("/exam")
     public List<Exercise> getExercises(@RequestParam Map<String, String> map) {
-        List<Section> sections = getSections();
-
         List<Exercise> result = new ArrayList<>();
-        for (Section section : sections) {
-            String counterStr = map.get(section.getName());
+        List<String> services = discoveryClient.getServices().stream()
+                .map(String::toLowerCase)
+                .collect(toList());
+
+        for (String serviceId : services) {
+            String counterStr = map.get(serviceId);
             Integer counter = counterStr != null ? Integer.parseInt(counterStr) : 2;
-            List<Exercise> exercises = getExercisesForSection(counter, section.getName());
+            List<Exercise> exercises = getExercisesForSection(counter, serviceId);
             result.addAll(exercises);
         }
         return result;
@@ -49,14 +53,6 @@ public class ExaminatorRestController {
     private List<Exercise> getExercisesForSection(Integer counter, String serviceId) {
         Exercise[] arr = restTemplate.getForObject("http://" + serviceId + "/exercise/random?counter=" + counter, Exercise[].class);
         return asList(arr);
-    }
-
-    private List<Section> getSections() {
-        return discoveryClient.getServices().stream()
-                .map(serviceId -> discoveryClient.getInstances(serviceId))
-                .map(instances -> instances.get(0))
-                .map(instance -> new Section(instance.getServiceId().toLowerCase(), instance.getHost() + ":" + instance.getPort()))
-                .collect(Collectors.toList());
     }
 
     @Bean @LoadBalanced
