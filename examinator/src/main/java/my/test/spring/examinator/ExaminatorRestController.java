@@ -2,9 +2,9 @@ package my.test.spring.examinator;
 
 import my.test.spring.examinator.model.Exercise;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,7 +21,7 @@ public class ExaminatorRestController {
     @Autowired
     private DiscoveryClient discoveryClient;
     @Autowired
-    private LoadBalancerClient balancerClient;
+    private RestTemplate restTemplate;
 
     public ExaminatorRestController() {
     }
@@ -35,17 +35,18 @@ public class ExaminatorRestController {
             String counterStr = map.get(service.toLowerCase());
             Integer counter = counterStr != null ? Integer.parseInt(counterStr) : 2;
 
-            ServiceInstance instance = balancerClient.choose(service);
+            Exercise[] arr = restTemplate.getForObject("http://" + service +
+                    "/exercise/random?counter=" + counter, Exercise[].class);
 
-            List<Exercise> exercises = getExercisesForSection(counter, instance.getHost() + ":" + instance.getPort());
+            List<Exercise> exercises = asList(arr);
             result.addAll(exercises);
         }
         return result;
     }
 
-    private List<Exercise> getExercisesForSection(Integer counter, String baseUrl) {
-        RestTemplate restTemplate = new RestTemplate();
-        Exercise[] arr = restTemplate.getForObject("http://" + baseUrl + "/exercise/random?counter=" + counter, Exercise[].class);
-        return asList(arr);
+    @Bean
+    @LoadBalanced
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 }
