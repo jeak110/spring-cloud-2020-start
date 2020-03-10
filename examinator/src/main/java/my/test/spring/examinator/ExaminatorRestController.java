@@ -20,6 +20,7 @@ import static java.util.Arrays.asList;
 
 @RestController
 public class ExaminatorRestController {
+
     @Autowired
     private DiscoveryClient discoveryClient;
 
@@ -48,9 +49,11 @@ public class ExaminatorRestController {
 
     private List<Section> getSections() {
         return discoveryClient.getServices().stream()
-                .map(serviceId -> discoveryClient.getInstances(serviceId))
-                .map(instances -> instances.get(0))
-                .map(instance -> new Section(instance.getServiceId().toLowerCase(), instance.getHost() + ":" + instance.getPort()))
-                .collect(Collectors.toList());
+                              .map(serviceId -> discoveryClient.getInstances(serviceId))
+                              .map(instances -> instances.get(0))
+                              .map(instance -> new Section(instance
+                                      .getServiceId()
+                                      .toLowerCase(), instance.getHost() + ":" + instance.getPort()))
+                              .collect(Collectors.toList());
     }
 }
