@@ -1,10 +1,16 @@
 package my.test.spring.examinator;
 
+import com.netflix.loadbalancer.IRule;
+import com.netflix.loadbalancer.RandomRule;
 import my.test.spring.examinator.model.Exercise;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.netflix.ribbon.RibbonClients;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -48,5 +54,15 @@ public class ExaminatorRestController {
     @LoadBalanced
     public RestTemplate restTemplate() {
         return new RestTemplate();
+    }
+
+    @Configuration
+    @RibbonClients(defaultConfiguration = MyLoadBalancerConfiguration.class)
+    public static class MyLoadBalancerConfiguration {
+        @Bean
+        public IRule ribbonRule() {
+            return new RandomRule();
+        }
+
     }
 }
