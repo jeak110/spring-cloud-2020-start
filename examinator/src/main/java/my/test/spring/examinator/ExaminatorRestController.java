@@ -55,14 +55,4 @@ public class ExaminatorRestController {
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
-
-    @Configuration
-    @RibbonClients(defaultConfiguration = MyLoadBalancerConfiguration.class)
-    public static class MyLoadBalancerConfiguration {
-        @Bean
-        public IRule ribbonRule() {
-            return new RandomRule();
-        }
-
-    }
 }
