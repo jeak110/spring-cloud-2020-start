@@ -8,3 +8,4 @@ Examinator: 8080, 8081, ..
 
 Discovery-server: 8200
 
+Config-serverL 9000
