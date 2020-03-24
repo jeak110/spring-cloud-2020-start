@@ -1,10 +1,8 @@
 package my.test.spring.examinator;
 
-import com.netflix.discovery.EurekaClient;
 import my.test.spring.examinator.model.Exercise;
 import my.test.spring.examinator.section.Section;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,12 +19,22 @@ import static java.util.Arrays.asList;
 @RestController
 public class ExaminatorRestController {
 
-    @Autowired
-    private DiscoveryClient discoveryClient;
+    private final DiscoveryClient discoveryClient;
 
-    public ExaminatorRestController() {
+    private final ExercisesServiceCaller exercisesServiceCaller;
+
+    @Autowired
+    public ExaminatorRestController(DiscoveryClient discoveryClient,
+                                    ExercisesServiceCaller exercisesServiceCaller) {
+        this.discoveryClient = discoveryClient;
+        this.exercisesServiceCaller = exercisesServiceCaller;
     }
 
+    /**
+     * localhost:8080/exam?math=3&theology=2
+     * @param map service name and exercises count
+     * @return list of exercises
+     */
     @GetMapping("/exam")
     public List<Exercise> getExercises(@RequestParam Map<String, String> map) {
         List<Section> sections = getSections();
@@ -35,7 +43,10 @@ public class ExaminatorRestController {
         for (Section section : sections) {
             String counterStr = map.get(section.getName());
             Integer counter = counterStr != null ? Integer.parseInt(counterStr) : 2;
-            List<Exercise> exercises = getExercisesForSection(counter, section.getBaseUrl());
+            //List<Exercise> exercises = getExercisesForSection(counter, section.getBaseUrl());
+            String additionalParams = "throwException";
+            List<Exercise> exercises = exercisesServiceCaller.getExercisesForSection(
+                    section.getExerciseCount(), section.getName(), additionalParams);
             result.addAll(exercises);
         }
         return result;
@@ -49,11 +60,12 @@ public class ExaminatorRestController {
 
     private List<Section> getSections() {
         return discoveryClient.getServices().stream()
-                              .map(serviceId -> discoveryClient.getInstances(serviceId))
+                              .map(discoveryClient::getInstances)
                               .map(instances -> instances.get(0))
-                              .map(instance -> new Section(instance
-                                      .getServiceId()
-                                      .toLowerCase(), instance.getHost() + ":" + instance.getPort()))
+                              .map(instance -> new Section(
+                                      instance.getServiceId().toLowerCase(),
+                                      instance.getHost() + ":" + instance.getPort(),
+                                      2))
                               .collect(Collectors.toList());
     }
 }
