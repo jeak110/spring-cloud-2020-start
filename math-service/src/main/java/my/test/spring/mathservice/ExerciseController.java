@@ -6,14 +6,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/exercise")
 public class ExerciseController {
+
+    private final Random random = new Random();
 
     @GetMapping("/random")
     public List<Exercise> random(@RequestParam Integer counter, @RequestParam(required = false) String... params) throws InterruptedException {
@@ -30,8 +29,8 @@ public class ExerciseController {
 
     private Exercise generateExercise() {
         Exercise exercise = new Exercise();
-        int a = (int) (Math.random() * 100);
-        int b = (int) (Math.random() * 100);
+        int a = random.nextInt(100);
+        int b = random.nextInt(100);
 
         exercise.setQuestion(a + " + " + b + " = ?");
         exercise.setAnswer("" + (a + b));
