@@ -19,8 +19,10 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 @RestController
 public class ExaminatorRestController {
@@ -34,7 +36,9 @@ public class ExaminatorRestController {
 
     @GetMapping("/exam")
     public List<Exercise> getExercises(@RequestParam Map<String, String> map) {
-        List<String> services = discoveryClient.getServices();
+        List<String> services = discoveryClient.getServices().stream()
+                .filter(x -> !"configserver".equalsIgnoreCase(x))
+                .collect(toList());
 
         List<Exercise> result = new ArrayList<>();
         for (String service : services) {
