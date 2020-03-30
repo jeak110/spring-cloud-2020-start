@@ -7,14 +7,12 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
-
-import static java.util.Arrays.asList;
 
 @RestController
 public class ExaminatorRestController {
@@ -31,7 +29,8 @@ public class ExaminatorRestController {
     }
 
     /**
-     * localhost:8080/exam?math=3&theology=2
+     * localhost:8080/exam?math=3&theology=2&additionalParams=timeout,exception
+     *
      * @param map service name and exercises count
      * @return list of exercises
      */
@@ -42,20 +41,12 @@ public class ExaminatorRestController {
         List<Exercise> result = new ArrayList<>();
         for (Section section : sections) {
             String counterStr = map.get(section.getName());
-            Integer counter = counterStr != null ? Integer.parseInt(counterStr) : 2;
-            //List<Exercise> exercises = getExercisesForSection(counter, section.getBaseUrl());
-            String additionalParams = "throwException";
-            List<Exercise> exercises = exercisesServiceCaller.getExercisesForSection(
-                    section.getExerciseCount(), section.getName(), additionalParams);
+            Integer counter = Objects.isNull(counterStr) ? section.getExerciseCount() : Integer.parseInt(counterStr);
+            String additionalParams = map.get("additionalParams");
+            List<Exercise> exercises = exercisesServiceCaller.getExercisesForSection(counter, section.getName(), additionalParams);
             result.addAll(exercises);
         }
         return result;
-    }
-
-    private List<Exercise> getExercisesForSection(Integer counter, String baseUrl) {
-        RestTemplate restTemplate = new RestTemplate();
-        Exercise[] arr = restTemplate.getForObject("http://" + baseUrl + "/exercise/random?counter=" + counter, Exercise[].class);
-        return asList(arr);
     }
 
     private List<Section> getSections() {

@@ -15,9 +15,15 @@ public class ExerciseController {
     private final Random random = new Random();
 
     @GetMapping("/random")
-    public List<Exercise> random(@RequestParam Integer counter, @RequestParam(required = false) String... params) throws InterruptedException {
+    public List<Exercise> random(@RequestParam Integer counter,
+                                 @RequestParam(required = false) String... params) throws InterruptedException {
         List<String> paramsList = Arrays.asList(params);
-        if (paramsList.contains("throwException")) {
+        if (paramsList.contains("timeout")) {
+            for (int i = 0; i < 10; i++) {
+                Thread.sleep(1000);
+            }
+        }
+        if (paramsList.contains("exception")) {
             throw new InterruptedException(String.valueOf(new Date()));
         }
         List<Exercise> result = new ArrayList<>();
